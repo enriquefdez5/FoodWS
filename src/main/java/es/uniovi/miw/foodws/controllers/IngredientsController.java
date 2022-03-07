@@ -33,8 +33,7 @@ public class IngredientsController {
             notes = "Returns a list of ingredients")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "ingredientName", value = "Name of the searched ingredient",
-                    required = false, paramType =
-                    "header")
+                    required = false, paramType = "path")
     })
     @ApiResponses(value = {
             @ApiResponse(code = 500, message = "Internal Server Error"),
@@ -61,8 +60,7 @@ public class IngredientsController {
             notes = "Get ingredient by id")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "id", value = "Id of the ingredient",
-                    required = false, paramType =
-                    "header")
+                    required = true, paramType = "path")
     })
     @ApiResponses(value = {
             @ApiResponse(code = 500, message = "Internal Server Error"),
@@ -149,6 +147,18 @@ public class IngredientsController {
      * @return deleted ingredient
      */
     @DeleteMapping("/{id}")
+    @ApiOperation(value = "Delete an ingredient",
+            notes = "Delete an ingredient found by id")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "id", value = "Id of the ingredient to delete",
+                    required = true, paramType = "path"),
+    })
+    @ApiResponses(value = {
+            @ApiResponse(code = 500, message = "Internal Server Error"),
+            @ApiResponse(code = 404, message = "Ingredient not found"),
+            @ApiResponse(code = 200, message = "Ok",
+                    response = Ingredient.class)
+    })
     public ResponseEntity<?> deleteIngredient(@PathVariable long id) {
         Optional<Ingredient> found = ingredientRepository.findById(id);
         if (found.isEmpty())

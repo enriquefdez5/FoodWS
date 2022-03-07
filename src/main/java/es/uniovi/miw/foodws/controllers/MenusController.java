@@ -1,7 +1,9 @@
 package es.uniovi.miw.foodws.controllers;
 
+import es.uniovi.miw.foodws.models.Ingredient;
 import es.uniovi.miw.foodws.models.Menu;
 import es.uniovi.miw.foodws.repositories.MenuRepository;
+import io.swagger.annotations.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -28,6 +30,18 @@ public class MenusController {
      * @return List of menus
      */
     @GetMapping
+    @ApiOperation(value = "List menus",
+            notes = "Returns a list of menus")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "menuName", value = "Name of the searched menu",
+                    required = false, paramType = "path")
+    })
+    @ApiResponses(value = {
+            @ApiResponse(code = 500, message = "Internal Server Error"),
+            @ApiResponse(code = 200, message = "Ok",
+                    response = Menu.class,
+                    responseContainer = "List")
+    })
     public ResponseEntity<?> getMenus
     (@RequestParam(value = "menuName", required = false) String menuName) {
         if (menuName != null)
@@ -43,6 +57,18 @@ public class MenusController {
      * @return menu
      */
     @GetMapping("/{id}")
+    @ApiOperation(value = "Get menu",
+            notes = "Get menu by id")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "id", value = "Id of the menu",
+                    required = true, paramType = "path")
+    })
+    @ApiResponses(value = {
+            @ApiResponse(code = 500, message = "Internal Server Error"),
+            @ApiResponse(code = 404, message = "Menu not found"),
+            @ApiResponse(code = 200, message = "Ok",
+                    response = Menu.class)
+    })
     public ResponseEntity<?> getMenu(@PathVariable long id) {
         Optional<Menu> found = menuRepository.findById(id);
         if (found.isEmpty())
