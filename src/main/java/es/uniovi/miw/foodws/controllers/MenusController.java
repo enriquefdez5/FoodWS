@@ -1,6 +1,6 @@
 package es.uniovi.miw.foodws.controllers;
 
-import es.uniovi.miw.foodws.models.Ingredient;
+import es.uniovi.miw.foodws.models.FatSecretFood;
 import es.uniovi.miw.foodws.models.Menu;
 import es.uniovi.miw.foodws.repositories.MenuRepository;
 import io.swagger.annotations.*;
@@ -9,6 +9,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.validation.Valid;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.net.URI;
 import java.util.Optional;
 
@@ -92,16 +95,23 @@ public class MenusController {
     }
 
     //TODO
-//    @GetMapping("/{id}/ingredients/nutritional")
-//    public ResponseEntity<?> getMenuIngredientsNutritional(@PathVariable long id) {
-//        Optional<Menu> found = menuRepository.findById(id);
-//        if (found.isEmpty())
-//            return ResponseEntity.notFound().build();
-//
-//        FatSecretFood fsf = new FatSecretFood();
-//
+    @GetMapping("/{id}/ingredients/nutritional")
+    public ResponseEntity<?> getMenuIngredientsNutritional(@PathVariable long id) {
+        Optional<Menu> found = menuRepository.findById(id);
+        if (found.isEmpty())
+            return ResponseEntity.notFound().build();
+
+        FatSecretFood fsf = new FatSecretFood();
+
+        Response response = ClientBuilder.newClient().
+                target("https://oauth.fatsecret.com/connect/token").
+                path("hello").
+                request(MediaType.APPLICATION_JSON).
+                get();
+        System.out.println(response.readEntity(String.class));
+
 //        for (Ingredient ing : found.get().getIngredientSet()) {
-//            double grams = ing.getGrams()
+//            double grams = ing.getGrams();
 //            fsf.setCalories(fsf.getCalories() + computePortion(grams, obj.calories));
 //            fsf.setCarbohydrate(fsf.getCarbohydrate() + computePortion(grams * obj.carbohydrate));
 //            fsf.setCarbohydratePercentage(fsf.getCarbohydratePercentage() + computePortion(grams, obj.carbohydratePercentage));
@@ -110,8 +120,8 @@ public class MenusController {
 //            fsf.setProtein(fsf.getProtein() + computePortion(grams, obj.protein));
 //            fsf.setProteinPercentage(fsf.getProteinPercentage() + computePortion(grams, obj.proteinPercentage));
 //        }
-//        return ResponseEntity.ok(fsf);
-//    }
+        return ResponseEntity.ok(fsf);
+    }
 
     private double computePortion(double grams, double portionValue) {
         int total = 100;

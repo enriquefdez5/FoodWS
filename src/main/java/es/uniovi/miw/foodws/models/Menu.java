@@ -9,7 +9,6 @@ import java.util.Set;
 
 @Entity
 public class Menu {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -19,7 +18,6 @@ public class Menu {
     @NotBlank
     @NotNull
     private String menuDescription;
-    @NotBlank
     @NotNull
     @Min(0)
     private Double menuPrice;
