@@ -1,9 +1,12 @@
 package es.uniovi.miw.foodws.controllers;
 
-import es.uniovi.miw.foodws.models.FatSecretFood;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import es.uniovi.miw.foodws.models.Ingredient;
 import es.uniovi.miw.foodws.models.Menu;
 import es.uniovi.miw.foodws.repositories.MenuRepository;
 import io.swagger.annotations.*;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -24,10 +27,17 @@ import java.util.Optional;
 @RequestMapping("/api/menus")
 public class MenusController {
 
+    private static final ObjectMapper mapper = new ObjectMapper();
+
+
     private final String CLIENT_ID = "1bdea3a471974265bc15440817c2bd2a";
     private final String CLIENT_SECRET = "51ca4d89329e4b64890023d1c88fe003";
     private final String OAUTH_FATSECRET_TOKEN_URL = "https://oauth.fatsecret.com/connect/token";
-    
+    private final String FATSECRET_API_URL = "https://platform.fatsecret.com/rest/server.api";
+    private final String FATSECRET_API_FOOD_METHOD = "method=food.get.v2";
+    private final String FATSECRET_API_FOOD_METHOD_FORMAT = "format=json";
+
+
     private final MenuRepository menuRepository;
 
     public MenusController(MenuRepository menuRepository) {
@@ -104,28 +114,50 @@ public class MenusController {
 
     //TODO
     @GetMapping("/{id}/ingredients/nutritional")
-    public ResponseEntity<?> getMenuIngredientsNutritional(@PathVariable long id) {
+    public ResponseEntity<?> getMenuIngredientsNutritional(@PathVariable long id) throws JsonProcessingException {
         Optional<Menu> found = menuRepository.findById(id);
         if (found.isEmpty())
             return ResponseEntity.notFound().build();
 
-        FatSecretFood fsf = new FatSecretFood();
-
-
-        // Encoding auth header
+        // Post petition for token
         String authHeader = CLIENT_ID + ":" + CLIENT_SECRET;
         byte[] b = authHeader.getBytes(StandardCharsets.US_ASCII);
-
         Response postResponse = ClientBuilder.newClient().
                 target(OAUTH_FATSECRET_TOKEN_URL).
                 request(MediaType.APPLICATION_JSON).
                 header(HttpHeaders.AUTHORIZATION, "Basic " + new String(Base64.getEncoder().encode(b))).
                 post(Entity.entity("grant_type=client_credentials&scope=basic", MediaType.APPLICATION_FORM_URLENCODED));
 
+        // If status != 200
+        if (!postResponse.getStatusInfo().toEnum().equals(Response.Status.OK)) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("3rd service does " +
+                    "not answer");
+        }
+
+        // Status == 200
         String response = postResponse.readEntity(String.class);
-        System.out.println("Post response" + postResponse);
-        System.out.println("response " + response);
-        return ResponseEntity.ok(fsf);
+        String access_token = "";
+        try {
+            Token token = new ObjectMapper().readValue(response, Token.class);
+            access_token = token.getAccess_token();
+        } catch (Exception e) {
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error mapping 3rd service info");
+        }
+
+        // Get ing info
+        for (Ingredient ing : found.get().getIngredientSet()) {
+            System.out.println("Access token: " + access_token);
+            Response postIngResponse = ClientBuilder.newClient().
+                    target(FATSECRET_API_URL).
+                    request(MediaType.APPLICATION_JSON).
+                    header(HttpHeaders.AUTHORIZATION, "Bearer " + access_token).
+                    post(Entity.entity(FATSECRET_API_FOOD_METHOD + "&food_id=" + ing.getFatSecretId() +
+                            "&" + FATSECRET_API_FOOD_METHOD_FORMAT, MediaType.APPLICATION_FORM_URLENCODED));
+            String ingresponse = postIngResponse.readEntity(String.class);
+            System.out.println(ingresponse);
+        }
+
+        return ResponseEntity.ok("ey!");
 
 
 //        for (Ingredient ing : found.get().getIngredientSet()) {
