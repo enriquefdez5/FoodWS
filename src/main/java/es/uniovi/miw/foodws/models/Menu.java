@@ -1,6 +1,8 @@
 package es.uniovi.miw.foodws.models;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import javax.persistence.*;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
@@ -8,6 +10,8 @@ import javax.validation.constraints.NotNull;
 import java.util.Set;
 
 @Entity
+@Table(name = "MENUS")
+@JsonIgnoreProperties("restaurant")
 public class Menu {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,9 +25,9 @@ public class Menu {
     @NotNull
     @Min(0)
     private Double menuPrice;
-    @ManyToOne(targetEntity = Restaurant.class)
+    @ManyToOne(targetEntity = Restaurant.class, cascade = CascadeType.ALL)
     private Restaurant restaurant;
-    @ManyToMany(targetEntity = Ingredient.class)
+    @ManyToMany(targetEntity = Ingredient.class, cascade = CascadeType.ALL)
     private Set<Ingredient> ingredientSet;
 
 

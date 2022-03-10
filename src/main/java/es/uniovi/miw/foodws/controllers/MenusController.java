@@ -9,13 +9,14 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.validation.Valid;
-import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Optional;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
@@ -23,6 +24,10 @@ import java.util.Optional;
 @RequestMapping("/api/menus")
 public class MenusController {
 
+    private final String CLIENT_ID = "1bdea3a471974265bc15440817c2bd2a";
+    private final String CLIENT_SECRET = "51ca4d89329e4b64890023d1c88fe003";
+    private final String OAUTH_FATSECRET_TOKEN_URL = "https://oauth.fatsecret.com/connect/token";
+    
     private final MenuRepository menuRepository;
 
     public MenusController(MenuRepository menuRepository) {
@@ -106,31 +111,22 @@ public class MenusController {
 
         FatSecretFood fsf = new FatSecretFood();
 
-        String OAUTH_API_ENDPOINT = "https://api.twitter.com/oauth2/token";
-        String consumerKey = "your consumer key";
-        String clientId = "1bdea3a471974265bc15440817c2bd2a";
-        String clientSecret = "51ca4d89329e4b64890023d1c88fe003";
-        String consumerSecret = "your consumer secret";
 
-        Client client =
-        WebTarget target = new WebTargetBuilder(client, OAUTH_API_ENDPOINT).build();
+        // Encoding auth header
+        String authHeader = CLIENT_ID + ":" + CLIENT_SECRET;
+        byte[] b = authHeader.getBytes(StandardCharsets.US_ASCII);
+
         Response postResponse = ClientBuilder.newClient().
-                target("https://oauth.fatsecret.com/connect/token").
+                target(OAUTH_FATSECRET_TOKEN_URL).
                 request(MediaType.APPLICATION_JSON).
-                header("Authorization", "Basic " + "encodedCredentials" + "Content-Type: application/json;charset=UTF-8").
-                post(Entity.entity("grant_type=client_credentials", MediaType.APPLICATION_FORM_URLENCODED));
+                header(HttpHeaders.AUTHORIZATION, "Basic " + new String(Base64.getEncoder().encode(b))).
+                post(Entity.entity("grant_type=client_credentials&scope=basic", MediaType.APPLICATION_FORM_URLENCODED));
 
-        return postResponse.toString();
+        String response = postResponse.readEntity(String.class);
+        System.out.println("Post response" + postResponse);
+        System.out.println("response " + response);
+        return ResponseEntity.ok(fsf);
 
-
-        Response response = ClientBuilder.newClient().
-                target("https://oauth.fatsecret.com/connect/token").
-                ("Authorization", "Basic " + "1bdea3a471974265bc15440817c2bd2a").
-                header("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8").
-                path("hello").
-                request(MediaType.APPLICATION_JSON).
-                .post(Entity.entity("grant_type=client_credentials",  MediaType.APPLICATION_FORM_URLENCODED);
-        System.out.println(response.readEntity(String.class));
 
 //        for (Ingredient ing : found.get().getIngredientSet()) {
 //            double grams = ing.getGrams();
@@ -142,7 +138,7 @@ public class MenusController {
 //            fsf.setProtein(fsf.getProtein() + computePortion(grams, obj.protein));
 //            fsf.setProteinPercentage(fsf.getProteinPercentage() + computePortion(grams, obj.proteinPercentage));
 //        }
-        return ResponseEntity.ok(fsf);
+
     }
 
     private double computePortion(double grams, double portionValue) {

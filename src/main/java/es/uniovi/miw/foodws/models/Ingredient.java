@@ -6,6 +6,7 @@ import javax.validation.constraints.NotNull;
 import java.util.Set;
 
 @Entity
+@Table(name = "INGREDIENTS")
 public class Ingredient {
 
     @Id

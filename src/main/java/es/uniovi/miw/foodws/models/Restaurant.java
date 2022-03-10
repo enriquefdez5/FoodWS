@@ -7,6 +7,7 @@ import javax.validation.constraints.NotNull;
 import java.util.Set;
 
 @Entity
+@Table(name = "RESTAURANTS")
 public class Restaurant {
 
     @Id
@@ -19,15 +20,14 @@ public class Restaurant {
     @NotNull
     private String restaurantAddress;
     @OneToMany(targetEntity = Menu.class, mappedBy = "restaurant")
-    private Set menuSet;
+    private Set<Menu> menuSet;
 
     public Restaurant() {
     }
 
-    public Restaurant(String restaurantName, String restaurantAddress, Set menuSet) {
+    public Restaurant(String restaurantName, String restaurantAddress) {
         this.restaurantName = restaurantName;
         this.restaurantAddress = restaurantAddress;
-        this.menuSet = menuSet;
     }
 
     public Long getId() {
@@ -54,11 +54,11 @@ public class Restaurant {
         this.restaurantAddress = restaurantAddress;
     }
 
-    public Set getMenuSet() {
+    public Set<Menu> getMenuSet() {
         return menuSet;
     }
 
-    public void setMenuSet(Set menuSet) {
+    public void setMenuSet(Set<Menu> menuSet) {
         this.menuSet = menuSet;
     }
 }
