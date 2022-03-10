@@ -9,7 +9,10 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.validation.Valid;
+import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.net.URI;
@@ -103,11 +106,30 @@ public class MenusController {
 
         FatSecretFood fsf = new FatSecretFood();
 
+        String OAUTH_API_ENDPOINT = "https://api.twitter.com/oauth2/token";
+        String consumerKey = "your consumer key";
+        String clientId = "1bdea3a471974265bc15440817c2bd2a";
+        String clientSecret = "51ca4d89329e4b64890023d1c88fe003";
+        String consumerSecret = "your consumer secret";
+
+        Client client =
+        WebTarget target = new WebTargetBuilder(client, OAUTH_API_ENDPOINT).build();
+        Response postResponse = ClientBuilder.newClient().
+                target("https://oauth.fatsecret.com/connect/token").
+                request(MediaType.APPLICATION_JSON).
+                header("Authorization", "Basic " + "encodedCredentials" + "Content-Type: application/json;charset=UTF-8").
+                post(Entity.entity("grant_type=client_credentials", MediaType.APPLICATION_FORM_URLENCODED));
+
+        return postResponse.toString();
+
+
         Response response = ClientBuilder.newClient().
                 target("https://oauth.fatsecret.com/connect/token").
+                ("Authorization", "Basic " + "1bdea3a471974265bc15440817c2bd2a").
+                header("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8").
                 path("hello").
                 request(MediaType.APPLICATION_JSON).
-                get();
+                .post(Entity.entity("grant_type=client_credentials",  MediaType.APPLICATION_FORM_URLENCODED);
         System.out.println(response.readEntity(String.class));
 
 //        for (Ingredient ing : found.get().getIngredientSet()) {
