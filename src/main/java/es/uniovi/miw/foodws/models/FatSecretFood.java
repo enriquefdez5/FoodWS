@@ -2,8 +2,6 @@ package es.uniovi.miw.foodws.models;
 
 public class FatSecretFood {
 
-    private Long id;
-
     // calories by 100g
     private double calories;
     // carbohydrates by 100g
@@ -24,7 +22,6 @@ public class FatSecretFood {
 
     public FatSecretFood(Long id, double calories, double carbohydrate, double carbohydratePercentage, double protein,
                          double proteinPercentage, double fat, double fatPercentage) {
-        this.id = id;
         this.calories = calories;
         this.carbohydrate = carbohydrate;
         this.carbohydratePercentage = carbohydratePercentage;
@@ -32,14 +29,6 @@ public class FatSecretFood {
         this.proteinPercentage = proteinPercentage;
         this.fat = fat;
         this.fatPercentage = fatPercentage;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public double getCalories() {
