@@ -1,4 +1,4 @@
-package es.uniovi.miw.foodws.controllers;
+package es.uniovi.miw.foodws.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import es.uniovi.miw.foodws.models.Token;
@@ -17,14 +17,13 @@ public class TokenManager {
 
     private static Token token;
 
-    public TokenManager(){
+    public TokenManager() {
     }
 
     public static String getAccessToken() {
         if (token == null) {
-            token =  requestNewToken();
-        }
-        else {
+            token = requestNewToken();
+        } else {
             System.out.println("Expires in: " + token.getExpires_in());
             if (new Date(token.getExpires_in()).toInstant().isBefore(new Date().toInstant())) {
                 token = requestNewToken();

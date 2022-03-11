@@ -30,6 +30,8 @@ public class Menu {
     @ManyToMany(targetEntity = Ingredient.class, cascade = CascadeType.ALL)
     private Set<Ingredient> ingredientSet;
 
+    @Transient
+    private FatSecretFood fsf;
 
     public Menu() {
     }
@@ -89,5 +91,13 @@ public class Menu {
 
     public void setIngredientSet(Set<Ingredient> ingredientSet) {
         this.ingredientSet = ingredientSet;
+    }
+    
+    public FatSecretFood getFsf() {
+        return fsf;
+    }
+
+    public void setFsf(FatSecretFood fsf) {
+        this.fsf = fsf;
     }
 }

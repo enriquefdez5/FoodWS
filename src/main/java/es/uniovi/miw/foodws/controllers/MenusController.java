@@ -1,45 +1,31 @@
 package es.uniovi.miw.foodws.controllers;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.ValueNode;
-import com.mysql.cj.xdevapi.JsonArray;
-import es.uniovi.miw.foodws.models.FatSecretFoodJson;
-import es.uniovi.miw.foodws.models.Ingredient;
+import es.uniovi.miw.foodws.models.FatSecretFood;
 import es.uniovi.miw.foodws.models.Menu;
 import es.uniovi.miw.foodws.repositories.MenuRepository;
+import es.uniovi.miw.foodws.services.FatSecretFoodService;
 import io.swagger.annotations.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.validation.Valid;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import java.net.URI;
-import java.util.*;
+import java.util.Optional;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/menus")
 public class MenusController {
 
-    private static final ObjectMapper mapper = new ObjectMapper();
-
-
-    private final String FATSECRET_API_URL = "https://platform.fatsecret.com/rest/server.api";
-    private final String FATSECRET_API_FOOD_METHOD = "method=food.get.v2";
-    private final String FATSECRET_API_FOOD_METHOD_FORMAT = "format=json";
-
+    @Autowired
+    private final FatSecretFoodService fatSecretFoodService;
 
     private final MenuRepository menuRepository;
 
-    public MenusController(MenuRepository menuRepository) {
+    public MenusController(FatSecretFoodService fatSecretFoodService, MenuRepository menuRepository) {
+        this.fatSecretFoodService = fatSecretFoodService;
         this.menuRepository = menuRepository;
     }
 
@@ -54,7 +40,7 @@ public class MenusController {
             notes = "Returns a list of menus")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "menuName", value = "Name of the searched menu",
-                    required = false, paramType = "path")
+                    paramType = "path")
     })
     @ApiResponses(value = {
             @ApiResponse(code = 500, message = "Internal Server Error"),
@@ -118,99 +104,15 @@ public class MenusController {
         if (found.isEmpty())
             return ResponseEntity.notFound().build();
 
-        // Get token
-        String access_token = TokenManager.getAccessToken();
-
-        // Get ing info
-        for (Ingredient ing : found.get().getIngredientSet()) {
-            System.out.println("Access token: " + access_token);
-            Response postIngResponse = ClientBuilder.newClient().
-                    target(FATSECRET_API_URL).
-                    request(MediaType.APPLICATION_JSON).
-                    header(HttpHeaders.AUTHORIZATION, "Bearer " + access_token).
-                    post(Entity.entity(FATSECRET_API_FOOD_METHOD + "&food_id=" + ing.getFatSecretId() +
-                            "&" + FATSECRET_API_FOOD_METHOD_FORMAT, MediaType.APPLICATION_FORM_URLENCODED));
-            String ingresponse = postIngResponse.readEntity(String.class);
-            try {
-                JsonNode jsonNode = mapper.readTree(ingresponse);
-                JsonNode servings = jsonNode.get("servings").get("serving");
-                if (servings.isArray()) {
-                    ArrayNode arrayNode = (ArrayNode) jsonNode;
-                    Iterator<JsonNode> itr = arrayNode.elements();
-                    System.out.println("Is array")
-                    while (itr.hasNext()) {
-                        node = itr.next();
-                        if (node.get("serving_description").equals("100g")) {
-
-                        }
-                    }
-                }
-
-
-                System.out.println(jsonNode);
-            }
-            catch (Exception e) {
-                System.out.println("Nooooo");
-            }
+        Menu menu = found.get();
+        FatSecretFood fsf = fatSecretFoodService.getFoodInfo(menu.getIngredientSet());
+        if (fsf == null) {
+            return ResponseEntity.internalServerError().body("Ups! Something went wrong...");
         }
-
-        return ResponseEntity.ok("ey!");
-
-
-//        for (Ingredient ing : found.get().getIngredientSet()) {
-//            double grams = ing.getGrams();
-//            fsf.setCalories(fsf.getCalories() + computePortion(grams, obj.calories));
-//            fsf.setCarbohydrate(fsf.getCarbohydrate() + computePortion(grams * obj.carbohydrate));
-//            fsf.setCarbohydratePercentage(fsf.getCarbohydratePercentage() + computePortion(grams, obj.carbohydratePercentage));
-//            fsf.setFat(fsf.getFat() + computePortion(grams, obj.fat);
-//            fsf.setFatPercentage(fsf.getFatPercentage() + computePortion(grams, obj.fatPercentage));
-//            fsf.setProtein(fsf.getProtein() + computePortion(grams, obj.protein));
-//            fsf.setProteinPercentage(fsf.getProteinPercentage() + computePortion(grams, obj.proteinPercentage));
-//        }
-
+        menu.setFsf(fsf);
+        return ResponseEntity.ok(menu);
     }
 
-
-
-    private void addKeys(String currentPath, JsonNode jsonNode, Map<String, String> map, List<Integer> suffix) {
-        if (jsonNode.isObject()) {
-            ObjectNode objectNode = (ObjectNode) jsonNode;
-            Iterator<Map.Entry<String, JsonNode>> iter = objectNode.fields();
-            String pathPrefix = currentPath.isEmpty() ? "" : currentPath + "-";
-
-            while (iter.hasNext()) {
-                Map.Entry<String, JsonNode> entry = iter.next();
-                addKeys(pathPrefix + entry.getKey(), entry.getValue(), map, suffix);
-            }
-        } else if (jsonNode.isArray()) {
-            ArrayNode arrayNode = (ArrayNode) jsonNode;
-
-            for (int i = 0; i < arrayNode.size(); i++) {
-                suffix.add(i + 1);
-                addKeys(currentPath, arrayNode.get(i), map, suffix);
-
-                if (i + 1 <arrayNode.size()){
-                    suffix.remove(arrayNode.size() - 1);
-                }
-            }
-        }
-        else if (jsonNode.isValueNode()) {
-            if (currentPath.contains("-")) {
-                for (int i = 0; i < suffix.size(); i++) {
-                    currentPath += "-" + suffix.get(i);
-                }
-
-                suffix = new ArrayList<>();
-            }
-
-            ValueNode valueNode = (ValueNode) jsonNode;
-            map.put(currentPath, valueNode.asText());
-        }
-    }
-    private double computePortion(double grams, double portionValue) {
-        int total = 100;
-        return grams * portionValue / total;
-    }
 
     /**
      * Add menu

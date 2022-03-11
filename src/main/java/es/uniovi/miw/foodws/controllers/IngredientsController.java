@@ -33,7 +33,7 @@ public class IngredientsController {
             notes = "Returns a list of ingredients")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "ingredientName", value = "Name of the searched ingredient",
-                    required = false, paramType = "path")
+                    paramType = "path")
     })
     @ApiResponses(value = {
             @ApiResponse(code = 500, message = "Internal Server Error"),
