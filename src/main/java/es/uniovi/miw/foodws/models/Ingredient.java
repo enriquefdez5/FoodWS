@@ -1,5 +1,7 @@
 package es.uniovi.miw.foodws.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -7,10 +9,12 @@ import java.util.Set;
 
 @Entity
 @Table(name = "INGREDIENTS")
+@JsonIgnoreProperties("menuSet")
 public class Ingredient {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "ingredient_id")
     private Long id;
     @NotNull
     private Long fatSecretId;
@@ -19,7 +23,7 @@ public class Ingredient {
     private String ingredientName;
     @NotNull
     private int grams;
-    @ManyToMany(targetEntity = Menu.class)
+    @ManyToMany(targetEntity = Menu.class, mappedBy = "ingredientSet")
     private Set<Menu> menuSet;
 
 

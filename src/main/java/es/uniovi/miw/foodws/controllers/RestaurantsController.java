@@ -74,6 +74,7 @@ public class RestaurantsController {
      */
     @PostMapping
     public ResponseEntity<?> postRestaurant(@Valid @RequestBody Restaurant restaurant) {
+        System.out.println("restaurant: " + restaurant);
         restaurantRepository.saveAndFlush(restaurant);
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest()
@@ -91,7 +92,7 @@ public class RestaurantsController {
      * @return updated menu
      */
     @PutMapping("/{id}")
-    public ResponseEntity<?> putMenu(@PathVariable long id, @Valid
+    public ResponseEntity<?> putRestaurant(@PathVariable long id, @Valid
     @RequestBody Restaurant restaurant) {
         Optional<Restaurant> found = restaurantRepository.findById(id);
         if (found.isEmpty())

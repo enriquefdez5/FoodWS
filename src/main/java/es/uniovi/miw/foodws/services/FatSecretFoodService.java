@@ -46,16 +46,22 @@ public class FatSecretFoodService {
             JsonNode jsonNode;
             try {
                 jsonNode = new ObjectMapper().readTree(ingresponse);
+                System.out.println("jsonnode:" + jsonNode);
             } catch (JsonProcessingException e) {
+                System.out.println("Ey error!");
                 return null;
             }
             JsonNode serving = jsonNode.get("food").get("servings").get("serving");
+            System.out.println("erving:" + serving);
+
             if (serving.isArray()) {
                 ArrayNode arrayNode = (ArrayNode) serving;
                 Iterator<JsonNode> itr = arrayNode.elements();
+                System.out.println("array node:" + arrayNode);
 
                 while (itr.hasNext()) {
                     JsonNode node = itr.next();
+                    System.out.println("Node:" + node);
                     if (node.get("serving_description").toString().equals("\"100 g\"")) {
                         calories += computePortion(grams, Double.parseDouble(String.valueOf(node.get("calories")).
                                 replace("\"", "")));
@@ -65,10 +71,15 @@ public class FatSecretFoodService {
                                 replace("\"", "")));
                         protein += computePortion(grams, Double.parseDouble(String.valueOf(node.get("protein")).
                                 replace("\"", "")));
+                        System.out.println("calories: " + calories);
                     }
                 }
             }
         }
+        System.out.println("calories: " + calories);
+        System.out.println("carbo: " + carbo);
+        System.out.println("protein: " + protein);
+        System.out.println("fat: " + fat);
         return new FatSecretFood(calories, carbo, protein, fat);
     }
 

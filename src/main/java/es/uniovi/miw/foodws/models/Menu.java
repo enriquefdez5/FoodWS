@@ -15,6 +15,7 @@ import java.util.Set;
 public class Menu {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "menu_id")
     private Long id;
     @NotBlank
     @NotNull
@@ -26,8 +27,13 @@ public class Menu {
     @Min(0)
     private Double menuPrice;
     @ManyToOne(targetEntity = Restaurant.class, cascade = CascadeType.ALL)
+    @JoinColumn(name="restaurant_id")
     private Restaurant restaurant;
     @ManyToMany(targetEntity = Ingredient.class, cascade = CascadeType.ALL)
+    @JoinTable(
+            name = "menus_ingredients",
+            joinColumns = @JoinColumn(name = "menu_id"),
+            inverseJoinColumns = @JoinColumn(name = "ingredient_id"))
     private Set<Ingredient> ingredientSet;
 
     @Transient
