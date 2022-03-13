@@ -12,6 +12,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.validation.Valid;
 import java.net.URI;
+import java.util.List;
 import java.util.Optional;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
@@ -43,17 +44,24 @@ public class MenusController {
                     paramType = "path")
     })
     @ApiResponses(value = {
-            @ApiResponse(code = 500, message = "Internal Server Error"),
             @ApiResponse(code = 200, message = "Ok",
                     response = Menu.class,
                     responseContainer = "List")
     })
     public ResponseEntity<?> getMenus
     (@RequestParam(value = "menuName", required = false) String menuName) {
-        if (menuName != null)
-            return ResponseEntity.
-                    ok(menuRepository.findByMenuName(menuName));
-        return ResponseEntity.ok(menuRepository.findAll());
+        if (menuName != null) {
+            List<Menu> menus = menuRepository.findByMenuName(menuName);
+            for (Menu menu : menus) {
+                menu.setFsf(fatSecretFoodService.getFoodInfo(menu.getIngredientSet()));
+            }
+            return ResponseEntity.ok(menus);
+        }
+        List<Menu> menus = menuRepository.findAll();
+        for (Menu menu : menus) {
+            menu.setFsf(fatSecretFoodService.getFoodInfo(menu.getIngredientSet()));
+        }
+        return ResponseEntity.ok(menus);
     }
 
     /**
@@ -70,7 +78,6 @@ public class MenusController {
                     required = true, paramType = "path")
     })
     @ApiResponses(value = {
-            @ApiResponse(code = 500, message = "Internal Server Error"),
             @ApiResponse(code = 404, message = "Menu not found"),
             @ApiResponse(code = 200, message = "Ok",
                     response = Menu.class)
@@ -79,7 +86,10 @@ public class MenusController {
         Optional<Menu> found = menuRepository.findById(id);
         if (found.isEmpty())
             return ResponseEntity.notFound().build();
-        return ResponseEntity.ok(found.get());
+
+        Menu menu = found.get();
+        menu.setFsf(fatSecretFoodService.getFoodInfo(menu.getIngredientSet()));
+        return ResponseEntity.ok(menu);
     }
 
 
@@ -90,6 +100,17 @@ public class MenusController {
      * @return menu ingredients
      */
     @GetMapping("/{id}/ingredients")
+    @ApiOperation(value = "Get menu ingredients",
+            notes = "Get all ingredients from a menu")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "id", value = "Id of the menu",
+                    required = true, paramType = "path")
+    })
+    @ApiResponses(value = {
+            @ApiResponse(code = 404, message = "Menu not found"),
+            @ApiResponse(code = 200, message = "Ok",
+                    response = Menu.class)
+    })
     public ResponseEntity<?> getMenuIngredients(@PathVariable long id) {
         Optional<Menu> found = menuRepository.findById(id);
         if (found.isEmpty())
@@ -97,8 +118,19 @@ public class MenusController {
         return ResponseEntity.ok(found.get().getIngredientSet());
     }
 
-    //TODO
     @GetMapping("/{id}/ingredients/nutritional")
+    @ApiOperation(value = "Get menu with fatsecret nutritional information",
+            notes = "Get menu with fatsecret nutritional information by id")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "id", value = "Id of the menu",
+                    required = true, paramType = "path")
+    })
+    @ApiResponses(value = {
+            @ApiResponse(code = 500, message = "Internal Server Error"),
+            @ApiResponse(code = 404, message = "Menu not found"),
+            @ApiResponse(code = 200, message = "Ok",
+                    response = Menu.class)
+    })
     public ResponseEntity<?> getMenuIngredientsNutritional(@PathVariable long id) {
         Optional<Menu> found = menuRepository.findById(id);
         if (found.isEmpty())
@@ -121,6 +153,16 @@ public class MenusController {
      * @return menu added
      */
     @PostMapping
+    @ApiOperation(value = "Post menu",
+            notes = "Post menu and save it")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "menu", value = "Menu object to persist",
+                    required = true, paramType = "body", dataType = "Menu")
+    })
+    @ApiResponses(value = {
+            @ApiResponse(code = 404, message = "Menu not found"),
+            @ApiResponse(code = 201, message = "Created", response = Menu.class)
+    })
     public ResponseEntity<?> postMenu(@Valid @RequestBody Menu menu) {
         menuRepository.saveAndFlush(menu);
         URI location = ServletUriComponentsBuilder
@@ -139,6 +181,19 @@ public class MenusController {
      * @return updated menu
      */
     @PutMapping("/{id}")
+    @ApiOperation(value = "Update menu",
+            notes = "Update menu find by id")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "id", value = "Id of the menu",
+                    required = true, paramType = "path"),
+            @ApiImplicitParam(name = "menu", value = "Menu object to persist",
+                    required = true, paramType = "body")
+    })
+    @ApiResponses(value = {
+            @ApiResponse(code = 500, message = "Internal Server Error"),
+            @ApiResponse(code = 404, message = "Menu not found"),
+            @ApiResponse(code = 200, message = "Ok", response = Menu.class)
+    })
     public ResponseEntity<?> putMenu(@PathVariable long id, @Valid
     @RequestBody Menu menu) {
         Optional<Menu> found = menuRepository.findById(id);
@@ -161,6 +216,16 @@ public class MenusController {
      * @return deleted menu
      */
     @DeleteMapping("/{id}")
+    @ApiOperation(value = "Delete menu",
+            notes = "Delete menu find by id")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "id", value = "Id of the menu",
+                    required = true, paramType = "path")
+    })
+    @ApiResponses(value = {
+            @ApiResponse(code = 404, message = "Menu not found"),
+            @ApiResponse(code = 200, message = "Ok", response = Menu.class)
+    })
     public ResponseEntity<?> deleteMenu(@PathVariable long id) {
         Optional<Menu> found = menuRepository.findById(id);
         if (found.isEmpty())

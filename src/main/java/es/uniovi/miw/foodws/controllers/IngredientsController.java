@@ -33,7 +33,7 @@ public class IngredientsController {
             notes = "Returns a list of ingredients")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "ingredientName", value = "Name of the searched ingredient",
-                    paramType = "path")
+                    paramType = "query")
     })
     @ApiResponses(value = {
             @ApiResponse(code = 500, message = "Internal Server Error"),
@@ -44,8 +44,7 @@ public class IngredientsController {
     public ResponseEntity<?> getIngredients
     (@RequestParam(value = "ingredientName", required = false) String ingredientName) {
         if (ingredientName != null)
-            return ResponseEntity.
-                    ok(ingredientRepository.findByIngredientName(ingredientName));
+            return ResponseEntity.ok(ingredientRepository.findByIngredientName(ingredientName));
         return ResponseEntity.ok(ingredientRepository.findAll());
     }
 
@@ -87,7 +86,7 @@ public class IngredientsController {
             notes = "Add an ingredient to the database")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "ingredient", value = "Ingredient",
-                    required = true, paramType = "body")
+                    required = true, paramType = "body", dataType = "Ingredient")
     })
     @ApiResponses(value = {
             @ApiResponse(code = 500, message = "Internal Server Error"),
@@ -147,7 +146,7 @@ public class IngredientsController {
      * @return deleted ingredient
      */
     @DeleteMapping("/{id}")
-    @ApiOperation(value = "Delete an ingredient",
+    @ApiOperation(value = "Delete ingredient",
             notes = "Delete an ingredient found by id")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "id", value = "Id of the ingredient to delete",
@@ -156,8 +155,7 @@ public class IngredientsController {
     @ApiResponses(value = {
             @ApiResponse(code = 500, message = "Internal Server Error"),
             @ApiResponse(code = 404, message = "Ingredient not found"),
-            @ApiResponse(code = 200, message = "Ok",
-                    response = Ingredient.class)
+            @ApiResponse(code = 200, message = "Ok", response = Ingredient.class)
     })
     public ResponseEntity<?> deleteIngredient(@PathVariable long id) {
         Optional<Ingredient> found = ingredientRepository.findById(id);

@@ -1,7 +1,7 @@
 package es.uniovi.miw.foodws.models;
 
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 
 import javax.persistence.*;
 import javax.validation.constraints.Min;
@@ -11,11 +11,9 @@ import java.util.Set;
 
 @Entity
 @Table(name = "MENUS")
-@JsonIgnoreProperties("restaurant")
 public class Menu {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "menu_id")
     private Long id;
     @NotBlank
     @NotNull
@@ -27,7 +25,8 @@ public class Menu {
     @Min(0)
     private Double menuPrice;
     @ManyToOne(targetEntity = Restaurant.class, cascade = CascadeType.ALL)
-    @JoinColumn(name="restaurant_id")
+    @JoinColumn(name = "restaurant_id")
+    @JsonBackReference
     private Restaurant restaurant;
     @ManyToMany(targetEntity = Ingredient.class, cascade = CascadeType.ALL)
     @JoinTable(
@@ -42,13 +41,11 @@ public class Menu {
     public Menu() {
     }
 
-    public Menu(String menuName, String menuDescription, Double menuPrice, Restaurant restaurant,
-                Set<Ingredient> ingredientSet) {
+    public Menu(String menuName, String menuDescription, Double menuPrice, Restaurant restaurant) {
         this.menuName = menuName;
         this.menuDescription = menuDescription;
         this.menuPrice = menuPrice;
         this.restaurant = restaurant;
-        this.ingredientSet = ingredientSet;
     }
 
     public Long getId() {
@@ -98,7 +95,7 @@ public class Menu {
     public void setIngredientSet(Set<Ingredient> ingredientSet) {
         this.ingredientSet = ingredientSet;
     }
-    
+
     public FatSecretFood getFsf() {
         return fsf;
     }
